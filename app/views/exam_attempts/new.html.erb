@@ -1,0 +1,68 @@
+<% content_for :title, t("ui.new.page_title") %>
+
+<header>
+  <p><%= t("ui.new.kicker") %></p>
+  <h1><%= t("ui.new.heading") %></h1>
+  <p><%= t("ui.new.lead") %></p>
+</header>
+
+<% if @question_bank.blank? || @exam_blueprint.blank? %>
+  <section>
+    <h2><%= t("ui.new.missing_config_title") %></h2>
+    <p><%= t("ui.new.missing_config_body") %></p>
+  </section>
+<% else %>
+  <section>
+    <h2><%= t("ui.new.new_attempt_title") %></h2>
+
+    <%= form_with url: exam_attempts_path, method: :post do %>
+      <p>
+        <label for="license_category_id"><%= t("ui.new.license_category_label") %></label>
+        <select id="license_category_id" name="license_category_id" required>
+          <option value=""><%= t("ui.new.select_category_prompt") %></option>
+          <% @license_categories.each do |category| %>
+            <option value="<%= category.id %>" <%= "selected" if @selected_category_id.to_s == category.id.to_s %>>
+              <%= category.code %>
+            </option>
+          <% end %>
+        </select>
+      </p>
+
+      <p>
+        <label for="locale"><%= t("ui.new.question_language_label") %></label>
+        <select id="locale" name="locale">
+          <% DrivingTestConstants::LOCALES.each do |locale| %>
+            <option value="<%= locale %>" <%= "selected" if @selected_locale.to_s == locale %>>
+              <%= t("ui.question_locales.#{locale}", default: locale.upcase) %>
+            </option>
+          <% end %>
+        </select>
+      </p>
+
+      <button type="submit"><%= t("ui.new.start_button") %></button>
+    <% end %>
+  </section>
+
+  <section>
+    <h2><%= t("ui.new.configuration_title") %></h2>
+    <dl>
+      <dt><%= t("ui.new.stats.question_bank") %></dt>
+      <dd><%= @question_bank.identifier %></dd>
+
+      <dt><%= t("ui.new.stats.questions") %></dt>
+      <dd><%= @question_bank.questions.count %></dd>
+
+      <dt><%= t("ui.new.stats.basic") %></dt>
+      <dd><%= @question_bank.questions.scope_basic.count %></dd>
+
+      <dt><%= t("ui.new.stats.specialist") %></dt>
+      <dd><%= @question_bank.questions.scope_specialist.count %></dd>
+
+      <dt><%= t("ui.new.stats.duration") %></dt>
+      <dd><%= @exam_blueprint.duration_minutes %> <%= t("ui.common.minutes_short") %></dd>
+
+      <dt><%= t("ui.new.stats.pass_score") %></dt>
+      <dd><%= @exam_blueprint.pass_score %> / <%= @exam_blueprint.max_score %></dd>
+    </dl>
+  </section>
+<% end %>

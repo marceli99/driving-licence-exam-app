@@ -1,0 +1,24 @@
+<% media_link = question.media_link_for(:main) %>
+<% if media_link.present? %>
+  <% media_asset = media_link.media_asset %>
+
+  <% if media_asset&.original_file&.attached? %>
+    <% if media_asset.kind_video? %>
+      <% video_attachment = media_asset.web_file.attached? ? media_asset.web_file : media_asset.original_file %>
+      <% video_content_type = media_asset.web_file.attached? ? "video/mp4" : (media_asset.content_type.presence || media_asset.original_file.content_type) %>
+      <video controls preload="metadata">
+        <source src="<%= url_for(video_attachment) %>" type="<%= video_content_type %>">
+      </video>
+      <% unless media_asset.web_file.attached? %>
+        <p>
+          <%= t("ui.media.mp4_not_ready") %>
+          <%= link_to t("ui.media.download_original"), url_for(media_asset.original_file), target: "_blank", rel: "noopener" %>.
+        </p>
+      <% end %>
+    <% else %>
+      <%= image_tag media_asset.original_file, alt: t("ui.media.image_alt", position: item.position), loading: "lazy" %>
+    <% end %>
+  <% else %>
+    <p><%= t("ui.media.missing_file", filename: media_link.source_filename) %></p>
+  <% end %>
+<% end %>

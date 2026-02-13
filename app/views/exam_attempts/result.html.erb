@@ -1,0 +1,66 @@
+<% content_for :title, t("ui.result.page_title", id: @exam_attempt.id) %>
+
+<% status_label =
+  if @exam_attempt.status_cancelled?
+    t("ui.result.status.cancelled")
+  elsif @exam_attempt.passed?
+    t("ui.result.status.passed")
+  else
+    t("ui.result.status.failed")
+  end %>
+<% completion_mode =
+  if @exam_attempt.status_cancelled?
+    t("ui.result.completion.cancelled")
+  elsif @exam_attempt.status_expired?
+    t("ui.result.completion.expired")
+  else
+    t("ui.result.completion.completed")
+  end %>
+
+<header>
+  <p><%= t("ui.result.kicker") %></p>
+  <h1>
+    <%= @exam_attempt.score || 0 %> / <%= @exam_attempt.max_score %> <%= t("ui.common.points_short") %>
+  </h1>
+  <p>
+    <%= t("ui.result.pass_threshold_label") %>: <strong><%= @exam_attempt.exam_blueprint.pass_score %> <%= t("ui.common.points_short") %></strong>
+    • <%= t("ui.result.language_label") %>: <strong><%= @exam_attempt.locale.upcase %></strong>
+    • <%= t("ui.result.status_label") %>: <strong><%= status_label %></strong>
+    • <%= t("ui.result.completion_label") %>: <strong><%= completion_mode %></strong>
+  </p>
+</header>
+
+<section>
+  <% @items.each do |item| %>
+    <% question = item.question %>
+    <% answer_state = if item.selected_key.present?
+                        item.answered_correctly? ? t("ui.result.answer_state.correct") : t("ui.result.answer_state.incorrect")
+                      else
+                        t("ui.result.answer_state.no_answer")
+                      end %>
+
+    <article>
+      <p>
+        #<%= item.position %>
+        • <%= item.points_possible %> <%= t("ui.common.points_short") %>
+        • <%= answer_state %>
+      </p>
+
+      <h2><%= question.stem_for(@exam_attempt.locale) %></h2>
+
+      <%= render "media", question: question, item: item %>
+
+      <p>
+        <%= t("ui.result.your_answer_label") %>:
+        <strong><%= item.selected_key.presence || t("ui.result.no_answer_short") %></strong>
+        •
+        <%= t("ui.result.correct_answer_label") %>:
+        <strong><%= item.correct_key %></strong>
+      </p>
+    </article>
+  <% end %>
+</section>
+
+<p>
+  <%= link_to t("ui.result.new_test"), root_path %>
+</p>
