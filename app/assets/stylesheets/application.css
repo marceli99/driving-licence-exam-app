@@ -238,6 +238,36 @@ fieldset label {
   font-size: 0.82rem;
 }
 
+.result-share {
+  margin-top: 0.35rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.result-share__row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.result-share__row input {
+  flex: 1;
+  max-width: none;
+  min-width: 0;
+}
+
+.result-share__copy {
+  min-height: 0;
+  padding: 0.45rem 0.75rem;
+  white-space: nowrap;
+}
+
+.result-share__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 fieldset br {
   display: none;
 }
@@ -369,6 +399,15 @@ video {
     display: block;
     margin-left: 0;
     margin-top: 0.15rem;
+  }
+
+  .result-share__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .result-share__copy {
+    width: 100%;
   }
 
   dl {

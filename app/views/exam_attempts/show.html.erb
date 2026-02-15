@@ -1,4 +1,4 @@
-<% content_for :title, t("ui.show.page_title", id: @exam_attempt.uuid) %>
+<% content_for :title, t("ui.show.page_title") %>
 
 <% content_for :head do %>
   <script>
@@ -41,7 +41,6 @@
 
 <header class="exam-header">
   <div class="exam-header__top">
-    <p><%= t("ui.show.attempt_kicker", id: @exam_attempt.uuid) %></p>
     <%= link_to t("ui.show.cancel_exam"), cancel_exam_attempt_path(@exam_attempt),
       class: "exam-header__cancel",
       data: { turbo_method: :patch, turbo_confirm: t("ui.show.cancel_exam_confirm") } %>

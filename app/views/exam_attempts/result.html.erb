@@ -1,21 +1,60 @@
 <% content_for :title, t("ui.result.page_title", id: @exam_attempt.uuid) %>
+<% review_link = result_exam_attempt_url(@exam_attempt) %>
+
+<% content_for :head do %>
+  <script>
+      document.addEventListener("turbo:load", function () {
+          const button = document.querySelector("[data-copy-review-link]");
+          const source = document.querySelector("[data-review-link]");
+          if (!button || !source) return;
+
+          function setButtonLabel(key) {
+              const label = button.dataset[key];
+              if (label) button.textContent = label;
+          }
+
+          button.addEventListener("click", async function () {
+              const text = source.value;
+              if (!text) return;
+
+              try {
+                  if (navigator.clipboard && window.isSecureContext) {
+                      await navigator.clipboard.writeText(text);
+                  } else {
+                      source.focus();
+                      source.select();
+                      source.setSelectionRange(0, source.value.length);
+                      document.execCommand("copy");
+                  }
+                  setButtonLabel("copiedLabel");
+              } catch (_error) {
+                  setButtonLabel("failedLabel");
+              } finally {
+                  window.setTimeout(function () {
+                      setButtonLabel("defaultLabel");
+                  }, 1800);
+              }
+          });
+      });
+  </script>
+<% end %>
 
 <% status_label =
-  if @exam_attempt.status_cancelled?
-    t("ui.result.status.cancelled")
-  elsif @exam_attempt.passed?
-    t("ui.result.status.passed")
-  else
-    t("ui.result.status.failed")
-  end %>
+     if @exam_attempt.status_cancelled?
+       t("ui.result.status.cancelled")
+     elsif @exam_attempt.passed?
+       t("ui.result.status.passed")
+     else
+       t("ui.result.status.failed")
+     end %>
 <% completion_mode =
-  if @exam_attempt.status_cancelled?
-    t("ui.result.completion.cancelled")
-  elsif @exam_attempt.status_expired?
-    t("ui.result.completion.expired")
-  else
-    t("ui.result.completion.completed")
-  end %>
+     if @exam_attempt.status_cancelled?
+       t("ui.result.completion.cancelled")
+     elsif @exam_attempt.status_expired?
+       t("ui.result.completion.expired")
+     else
+       t("ui.result.completion.completed")
+     end %>
 
 <header>
   <p><%= t("ui.result.kicker") %></p>
@@ -23,11 +62,26 @@
     <%= @exam_attempt.score || 0 %> / <%= @exam_attempt.max_score %> <%= t("ui.common.points_short") %>
   </h1>
   <p>
-    <%= t("ui.result.pass_threshold_label") %>: <strong><%= @exam_attempt.exam_blueprint.pass_score %> <%= t("ui.common.points_short") %></strong>
+    <%= t("ui.result.pass_threshold_label") %>:
+    <strong><%= @exam_attempt.exam_blueprint.pass_score %> <%= t("ui.common.points_short") %></strong>
     • <%= t("ui.result.language_label") %>: <strong><%= @exam_attempt.locale.upcase %></strong>
     • <%= t("ui.result.status_label") %>: <strong><%= status_label %></strong>
     • <%= t("ui.result.completion_label") %>: <strong><%= completion_mode %></strong>
   </p>
+  <div class="result-share">
+    <label for="result-share-link"><%= t("ui.result.review_link_label") %></label>
+    <div class="result-share__row">
+      <input id="result-share-link" type="text" value="<%= review_link %>" readonly data-review-link>
+      <button type="button"
+              class="result-share__copy"
+              data-copy-review-link
+              data-default-label="<%= t("ui.result.copy_link") %>"
+              data-copied-label="<%= t("ui.result.link_copied") %>"
+              data-failed-label="<%= t("ui.result.copy_failed") %>">
+        <%= t("ui.result.copy_link") %>
+      </button>
+    </div>
+  </div>
 </header>
 
 <section>
@@ -39,16 +93,16 @@
                         t("ui.result.answer_state.no_answer")
                       end %>
     <% options =
-      if question.answer_mode_yes_no?
-        case @exam_attempt.locale
-        when "en" then [ [ "T", "Yes" ], [ "N", "No" ] ]
-        when "de" then [ [ "T", "Ja" ], [ "N", "Nein" ] ]
-        when "ua" then [ [ "T", "Так" ], [ "N", "Ні" ] ]
-        else [ [ "T", "Tak" ], [ "N", "Nie" ] ]
-        end
-      else
-        question.question_options.sort_by(&:position).map { |option| [ option.key, option.text_for(@exam_attempt.locale) ] }
-      end %>
+         if question.answer_mode_yes_no?
+           case @exam_attempt.locale
+           when "en" then [["T", "Yes"], ["N", "No"]]
+           when "de" then [["T", "Ja"], ["N", "Nein"]]
+           when "ua" then [["T", "Так"], ["N", "Ні"]]
+           else [["T", "Tak"], ["N", "Nie"]]
+           end
+         else
+           question.question_options.sort_by(&:position).map { |option| [option.key, option.text_for(@exam_attempt.locale)] }
+         end %>
     <% selected_option = options.find { |key, _text| key == item.selected_key } %>
     <% correct_option = options.find { |key, _text| key == item.correct_key } %>
 
@@ -73,7 +127,7 @@
 
       <ul class="result-options">
         <% options.each do |key, text| %>
-          <% classes = [ "result-option" ] %>
+          <% classes = ["result-option"] %>
           <% classes << "result-option--correct" if key == item.correct_key %>
           <% classes << "result-option--selected" if key == item.selected_key %>
           <li class="<%= classes.join(" ") %>">

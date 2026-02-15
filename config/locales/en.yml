@@ -42,7 +42,7 @@ en:
         duration: "Duration"
         pass_score: "Passing score"
     show:
-      page_title: "Exam #%{id}"
+      page_title: "Exam"
       attempt_kicker: "Attempt #%{id}"
       question_progress: "Question %{current} of %{total}"
       completed_label: "Completed"
@@ -61,6 +61,11 @@ en:
     result:
       page_title: "Result #%{id}"
       kicker: "Exam result"
+      review_link_label: "Answer preview link"
+      copy_link: "Copy link"
+      link_copied: "Copied"
+      copy_failed: "Copy failed"
+      open_review_link: "Open preview"
       pass_threshold_label: "Passing threshold"
       language_label: "Language"
       status_label: "Status"

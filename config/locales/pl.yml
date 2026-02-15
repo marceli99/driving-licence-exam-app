@@ -42,7 +42,7 @@ pl:
         duration: "Czas"
         pass_score: "Wynik zaliczający"
     show:
-      page_title: "Egzamin #%{id}"
+      page_title: "Egzamin"
       attempt_kicker: "Próba #%{id}"
       question_progress: "Pytanie %{current} z %{total}"
       completed_label: "Ukończono"
@@ -61,6 +61,11 @@ pl:
     result:
       page_title: "Wynik #%{id}"
       kicker: "Wynik egzaminu"
+      review_link_label: "Link do podglądu odpowiedzi"
+      copy_link: "Kopiuj link"
+      link_copied: "Skopiowano"
+      copy_failed: "Błąd kopiowania"
+      open_review_link: "Otwórz podgląd"
       pass_threshold_label: "Próg zaliczenia"
       language_label: "Język"
       status_label: "Status"
