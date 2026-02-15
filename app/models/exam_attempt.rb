@@ -5,6 +5,8 @@ class ExamAttempt < ApplicationRecord
 
   has_many :exam_attempt_items, dependent: :destroy
 
+  before_validation :ensure_uuid, on: :create
+
   enum :status, {
     in_progress: 0,
     submitted: 1,
@@ -12,6 +14,7 @@ class ExamAttempt < ApplicationRecord
     cancelled: 3
   }, prefix: true
 
+  validates :uuid, presence: true, uniqueness: true
   validates :locale, inclusion: { in: DrivingTestConstants::LOCALES }
   validates :started_at, :deadline_at, presence: true
   validates :max_score, numericality: { only_integer: true, greater_than: 0 }
@@ -19,7 +22,15 @@ class ExamAttempt < ApplicationRecord
   validate :deadline_not_before_start
   validate :score_not_above_max_score
 
+  def to_param
+    uuid
+  end
+
   private
+
+  def ensure_uuid
+    self.uuid ||= SecureRandom.uuid
+  end
 
   def deadline_not_before_start
     return if started_at.blank? || deadline_at.blank?

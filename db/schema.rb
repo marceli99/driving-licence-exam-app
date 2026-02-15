@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_06_173030) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pgcrypto"
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
@@ -80,11 +81,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_06_173030) do
     t.integer "status", default: 0, null: false
     t.datetime "submitted_at"
     t.datetime "updated_at", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
     t.index ["exam_blueprint_id"], name: "index_exam_attempts_on_exam_blueprint_id"
     t.index ["license_category_id"], name: "index_exam_attempts_on_license_category_id"
     t.index ["question_bank_id"], name: "index_exam_attempts_on_question_bank_id"
     t.index ["started_at"], name: "index_exam_attempts_on_started_at"
     t.index ["status"], name: "index_exam_attempts_on_status"
+    t.index ["uuid"], name: "index_exam_attempts_on_uuid", unique: true
     t.check_constraint "deadline_at >= started_at", name: "exam_attempts_deadline_after_start"
     t.check_constraint "locale::text = ANY (ARRAY['pl'::character varying, 'en'::character varying, 'de'::character varying, 'ua'::character varying]::text[])", name: "exam_attempts_locale_valid"
     t.check_constraint "max_score > 0", name: "exam_attempts_max_score_positive"

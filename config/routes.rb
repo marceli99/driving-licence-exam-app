@@ -11,7 +11,7 @@ Rails.application.routes.draw do
 
   root "exam_attempts#new"
 
-  resources :exam_attempts, only: [ :new, :create, :show, :update ] do
+  resources :exam_attempts, only: [ :new, :create, :show, :update ], param: :uuid do
     member do
       patch :cancel
       get :result

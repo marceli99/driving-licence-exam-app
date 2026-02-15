@@ -1,4 +1,4 @@
-<% content_for :title, t("ui.show.page_title", id: @exam_attempt.id) %>
+<% content_for :title, t("ui.show.page_title", id: @exam_attempt.uuid) %>
 
 <% content_for :head do %>
   <script>
@@ -39,8 +39,13 @@
   </script>
 <% end %>
 
-<header>
-  <p><%= t("ui.show.attempt_kicker", id: @exam_attempt.id) %></p>
+<header class="exam-header">
+  <div class="exam-header__top">
+    <p><%= t("ui.show.attempt_kicker", id: @exam_attempt.uuid) %></p>
+    <%= link_to t("ui.show.cancel_exam"), cancel_exam_attempt_path(@exam_attempt),
+      class: "exam-header__cancel",
+      data: { turbo_method: :patch, turbo_confirm: t("ui.show.cancel_exam_confirm") } %>
+  </div>
   <h1><%= t("ui.show.question_progress", current: @current_item.position, total: @questions_total) %></h1>
   <p>
     <%= t("ui.show.completed_label") %>: <strong><%= @answered_questions_count %></strong> / <strong><%= @questions_total %></strong>
@@ -62,14 +67,6 @@
     <strong data-deadline="<%= (Time.current + @exam_time_left_seconds.seconds).to_i * 1000 %>">--:--</strong>
   </p>
 </section>
-
-<nav>
-  <%= link_to t("ui.show.back_home"), root_path,
-    data: { turbo_confirm: t("ui.show.back_home_confirm") } %>
-  |
-  <%= link_to t("ui.show.cancel_exam"), cancel_exam_attempt_path(@exam_attempt),
-    data: { turbo_method: :patch, turbo_confirm: t("ui.show.cancel_exam_confirm") } %>
-</nav>
 
 <%= form_with url: exam_attempt_path(@exam_attempt), method: :patch do %>
   <% item = @current_item %>
@@ -101,7 +98,7 @@
                           else [["T", "Tak"], ["N", "Nie"]]
                           end %>
         <% yes_no_labels.each do |key, label| %>
-          <label>
+          <label class="answer-option <%= key == "T" ? "answer-option--yes" : "answer-option--no" %>">
             <%= radio_button_tag :answer, key, false %>
             <span><%= label %></span>
           </label>
@@ -109,7 +106,7 @@
         <% end %>
       <% else %>
         <% question.question_options.sort_by(&:position).each do |option| %>
-          <label>
+          <label class="answer-option">
             <%= radio_button_tag :answer, option.key, false %>
             <span><strong><%= option.key %>.</strong> <%= option.text_for(@exam_attempt.locale) %></span>
           </label>
@@ -119,7 +116,7 @@
     </fieldset>
   </article>
 
-  <p>
+  <p class="question-submit">
     <button type="submit" data-auto-submit="true">
       <%= @last_question ? t("ui.show.finish_exam") : t("ui.show.next_question") %>
     </button>

@@ -127,7 +127,7 @@ class ExamAttemptsController < ApplicationController
   end
 
   def set_exam_attempt
-    @exam_attempt = ExamAttempt.find(params[:id])
+    @exam_attempt = ExamAttempt.find_by!(uuid: params[:uuid])
   end
 
   def attempt_params

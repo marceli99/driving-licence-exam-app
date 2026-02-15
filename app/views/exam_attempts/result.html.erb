@@ -1,4 +1,4 @@
-<% content_for :title, t("ui.result.page_title", id: @exam_attempt.id) %>
+<% content_for :title, t("ui.result.page_title", id: @exam_attempt.uuid) %>
 
 <% status_label =
   if @exam_attempt.status_cancelled?
@@ -38,6 +38,19 @@
                       else
                         t("ui.result.answer_state.no_answer")
                       end %>
+    <% options =
+      if question.answer_mode_yes_no?
+        case @exam_attempt.locale
+        when "en" then [ [ "T", "Yes" ], [ "N", "No" ] ]
+        when "de" then [ [ "T", "Ja" ], [ "N", "Nein" ] ]
+        when "ua" then [ [ "T", "Так" ], [ "N", "Ні" ] ]
+        else [ [ "T", "Tak" ], [ "N", "Nie" ] ]
+        end
+      else
+        question.question_options.sort_by(&:position).map { |option| [ option.key, option.text_for(@exam_attempt.locale) ] }
+      end %>
+    <% selected_option = options.find { |key, _text| key == item.selected_key } %>
+    <% correct_option = options.find { |key, _text| key == item.correct_key } %>
 
     <article>
       <p>
@@ -52,11 +65,28 @@
 
       <p>
         <%= t("ui.result.your_answer_label") %>:
-        <strong><%= item.selected_key.presence || t("ui.result.no_answer_short") %></strong>
+        <strong><%= selected_option ? "#{selected_option[0]}. #{selected_option[1]}" : t("ui.result.no_answer_short") %></strong>
         •
         <%= t("ui.result.correct_answer_label") %>:
-        <strong><%= item.correct_key %></strong>
+        <strong><%= correct_option ? "#{correct_option[0]}. #{correct_option[1]}" : item.correct_key %></strong>
       </p>
+
+      <ul class="result-options">
+        <% options.each do |key, text| %>
+          <% classes = [ "result-option" ] %>
+          <% classes << "result-option--correct" if key == item.correct_key %>
+          <% classes << "result-option--selected" if key == item.selected_key %>
+          <li class="<%= classes.join(" ") %>">
+            <strong><%= key %>.</strong> <%= text %>
+            <% if key == item.correct_key %>
+              <span class="result-option__meta"><%= t("ui.result.correct_answer_label") %></span>
+            <% end %>
+            <% if key == item.selected_key %>
+              <span class="result-option__meta"><%= t("ui.result.your_answer_label") %></span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
     </article>
   <% end %>
 </section>

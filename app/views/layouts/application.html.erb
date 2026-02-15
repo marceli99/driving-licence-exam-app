@@ -17,11 +17,13 @@
 
   <body>
     <main>
-      <nav aria-label="<%= t("ui.layout.interface_language") %>">
-        <span><%= t("ui.layout.interface_language_short") %>:</span>
-        <%= link_to "PL", ui_language_switch_path(:pl) %>
-        <%= link_to "EN", ui_language_switch_path(:en) %>
-      </nav>
+      <% if controller_name == "exam_attempts" && action_name == "new" %>
+        <nav aria-label="<%= t("ui.layout.interface_language") %>">
+          <span><%= t("ui.layout.interface_language_short") %>:</span>
+          <%= link_to "PL", ui_language_switch_path(:pl) %>
+          <%= link_to "EN", ui_language_switch_path(:en) %>
+        </nav>
+      <% end %>
 
       <% if flash[:alert].present? %>
         <p><strong>Alert:</strong> <%= flash[:alert] %></p>
