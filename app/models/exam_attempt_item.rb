@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ExamAttemptItem < ApplicationRecord
   belongs_to :exam_attempt
   belongs_to :question

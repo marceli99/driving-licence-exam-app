@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 class ExamAttemptBuilder
   class BuildError < StandardError; end
 
-  def initialize(license_category:, locale: "pl", exam_blueprint: nil, question_bank: nil)
+  def initialize(license_category:, locale: 'pl', exam_blueprint: nil, question_bank: nil)
     @license_category = license_category
     @locale = locale.to_s
     @exam_blueprint = exam_blueprint || ExamBlueprint.active.order(updated_at: :desc).first
@@ -46,16 +48,16 @@ class ExamAttemptBuilder
   private
 
   def validate!
-    raise BuildError, I18n.t("ui.errors.no_question_bank") if @question_bank.nil?
-    raise BuildError, I18n.t("ui.errors.no_exam_blueprint") if @exam_blueprint.nil?
-    raise BuildError, I18n.t("ui.errors.invalid_exam_language") unless DrivingTestConstants::LOCALES.include?(@locale)
-    raise BuildError, I18n.t("ui.errors.select_license_category") if @license_category.nil?
+    raise BuildError, I18n.t('ui.errors.no_question_bank') if @question_bank.nil?
+    raise BuildError, I18n.t('ui.errors.no_exam_blueprint') if @exam_blueprint.nil?
+    raise BuildError, I18n.t('ui.errors.invalid_exam_language') unless DrivingTestConstants::LOCALES.include?(@locale)
+    raise BuildError, I18n.t('ui.errors.select_license_category') if @license_category.nil?
   end
 
   def collect_question_assignments
     assignments = []
 
-    [ :basic, :specialist ].each do |scope|
+    %i[basic specialist].each do |scope|
       required_count = scope_count(scope)
       next if required_count <= 0
 
@@ -98,9 +100,9 @@ class ExamAttemptBuilder
     available = candidates.count
 
     if available < required_count
-      scope_label = scope == :basic ? I18n.t("ui.common.scope_basic") : I18n.t("ui.common.scope_specialist")
+      scope_label = scope == :basic ? I18n.t('ui.common.scope_basic') : I18n.t('ui.common.scope_specialist')
       raise BuildError, I18n.t(
-        "ui.errors.insufficient_questions",
+        'ui.errors.insufficient_questions',
         locale_code: @locale.upcase,
         scope: scope_label,
         available: available,
@@ -119,7 +121,7 @@ class ExamAttemptBuilder
   def build_fallback_points(scope, required_count)
     rules = rules_for_scope(scope)
     if rules.sum(&:questions_count) == required_count
-      return rules.flat_map { |rule| [ rule.question_weight ] * rule.questions_count }.shuffle(random: @random)
+      return rules.flat_map { |rule| [rule.question_weight] * rule.questions_count }.shuffle(random: @random)
     end
 
     default = default_points_distribution(scope)
@@ -128,9 +130,9 @@ class ExamAttemptBuilder
 
   def default_points_distribution(scope)
     if scope == :basic
-      [ 3 ] * 10 + [ 2 ] * 6 + [ 1 ] * 4
+      ([3] * 10) + ([2] * 6) + ([1] * 4)
     else
-      [ 3 ] * 6 + [ 2 ] * 4 + [ 1 ] * 2
+      ([3] * 6) + ([2] * 4) + ([1] * 2)
     end
   end
 
@@ -143,9 +145,9 @@ class ExamAttemptBuilder
     @scoped_questions ||= {}
     @scoped_questions[scope] ||= begin
       base_scope = Question
-        .joins(:question_categories)
-        .where(question_bank: @question_bank, active: true, scope: Question.scopes.fetch(scope.to_s))
-        .where(question_categories: { license_category_id: @license_category.id })
+                   .joins(:question_categories)
+                   .where(question_bank: @question_bank, active: true, scope: Question.scopes.fetch(scope.to_s))
+                   .where(question_categories: { license_category_id: @license_category.id })
 
       localized_scope(without_broken_main_media(base_scope))
     end
@@ -153,40 +155,40 @@ class ExamAttemptBuilder
 
   def without_broken_main_media(relation)
     broken_main_media_question_ids = QuestionMediaLink
-      .left_joins(:media_asset)
-      .where(slot: QuestionMediaLink.slots.fetch("main"))
-      .where(
-        "question_media_links.status = :missing_status OR question_media_links.media_asset_id IS NULL OR media_assets.processing_status = :media_missing_status",
-        missing_status: QuestionMediaLink.statuses.fetch("missing"),
-        media_missing_status: MediaAsset.processing_statuses.fetch("missing")
-      )
-      .select(:question_id)
+                                     .left_joins(:media_asset)
+                                     .where(slot: QuestionMediaLink.slots.fetch('main'))
+                                     .where(
+                                       'question_media_links.status = :missing_status OR question_media_links.media_asset_id IS NULL OR media_assets.processing_status = :media_missing_status',
+                                       missing_status: QuestionMediaLink.statuses.fetch('missing'),
+                                       media_missing_status: MediaAsset.processing_statuses.fetch('missing')
+                                     )
+                                     .select(:question_id)
 
     relation.where.not(id: broken_main_media_question_ids)
   end
 
   def localized_scope(relation)
-    return relation if @locale == "pl"
+    return relation if @locale == 'pl'
 
     # For non-PL attempts, pick only questions translated to selected locale.
     stem_translated = relation.joins(:question_translations).where(question_translations: { locale: @locale })
 
     # Single-choice questions additionally need all A/B/C options translated.
     single_choice_with_full_options = QuestionOption
-      .joins(:question_option_translations)
-      .where(question_option_translations: { locale: @locale })
-      .group(:question_id)
-      .having("COUNT(DISTINCT question_options.key) = 3")
-      .select(:question_id)
+                                      .joins(:question_option_translations)
+                                      .where(question_option_translations: { locale: @locale })
+                                      .group(:question_id)
+                                      .having('COUNT(DISTINCT question_options.key) = 3')
+                                      .select(:question_id)
 
     stem_translated.where(
-      "questions.answer_mode = :yes_no OR questions.id IN (:translated_single_choice_ids)",
-      yes_no: Question.answer_modes.fetch("yes_no"),
+      'questions.answer_mode = :yes_no OR questions.id IN (:translated_single_choice_ids)',
+      yes_no: Question.answer_modes.fetch('yes_no'),
       translated_single_choice_ids: single_choice_with_full_options
     )
   end
 
   def sample_relation(relation, count)
-    relation.order(Arel.sql("RANDOM()")).limit(count).to_a
+    relation.order(Arel.sql('RANDOM()')).limit(count).to_a
   end
 end

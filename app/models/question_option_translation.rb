@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class QuestionOptionTranslation < ApplicationRecord
   belongs_to :question_option
 

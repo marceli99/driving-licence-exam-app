@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ExamAttempt < ApplicationRecord
   belongs_to :exam_blueprint
   belongs_to :question_bank
@@ -36,13 +38,13 @@ class ExamAttempt < ApplicationRecord
     return if started_at.blank? || deadline_at.blank?
     return if deadline_at >= started_at
 
-    errors.add(:deadline_at, "must be on or after started_at")
+    errors.add(:deadline_at, 'must be on or after started_at')
   end
 
   def score_not_above_max_score
     return if score.blank? || max_score.blank?
     return if score <= max_score
 
-    errors.add(:score, "must not exceed max_score")
+    errors.add(:score, 'must not exceed max_score')
   end
 end

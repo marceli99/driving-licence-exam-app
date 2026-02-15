@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ExamBlueprintRule < ApplicationRecord
   belongs_to :exam_blueprint
 
@@ -5,5 +7,5 @@ class ExamBlueprintRule < ApplicationRecord
 
   validates :question_weight, inclusion: { in: DrivingTestConstants::QUESTION_WEIGHTS }
   validates :questions_count, numericality: { only_integer: true, greater_than: 0 }
-  validates :question_weight, uniqueness: { scope: [ :exam_blueprint_id, :scope ] }
+  validates :question_weight, uniqueness: { scope: %i[exam_blueprint_id scope] }
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MediaAsset < ApplicationRecord
   has_one_attached :original_file
   has_one_attached :web_file

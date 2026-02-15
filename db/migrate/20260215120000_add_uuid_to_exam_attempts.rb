@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 class AddUuidToExamAttempts < ActiveRecord::Migration[8.1]
   def up
-    enable_extension "pgcrypto" unless extension_enabled?("pgcrypto")
+    enable_extension 'pgcrypto' unless extension_enabled?('pgcrypto')
 
     add_column :exam_attempts, :uuid, :uuid
     add_index :exam_attempts, :uuid, unique: true
@@ -12,7 +14,7 @@ class AddUuidToExamAttempts < ActiveRecord::Migration[8.1]
     SQL
 
     change_column_null :exam_attempts, :uuid, false
-    change_column_default :exam_attempts, :uuid, -> { "gen_random_uuid()" }
+    change_column_default :exam_attempts, :uuid, -> { 'gen_random_uuid()' }
   end
 
   def down

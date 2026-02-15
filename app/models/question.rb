@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Question < ApplicationRecord
   belongs_to :question_bank
 
@@ -22,7 +24,7 @@ class Question < ApplicationRecord
   scope :enabled, -> { where(active: true) }
 
   def stem_for(locale)
-    translation_for(locale)&.stem || translation_for("pl")&.stem || question_translations.first&.stem.to_s
+    translation_for(locale)&.stem || translation_for('pl')&.stem || question_translations.first&.stem.to_s
   end
 
   def translation_for(locale)
@@ -47,6 +49,6 @@ class Question < ApplicationRecord
 
     return if valid
 
-    errors.add(:correct_key, "must match question answer mode")
+    errors.add(:correct_key, 'must match question answer mode')
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class QuestionOption < ApplicationRecord
   belongs_to :question
   has_many :question_option_translations, dependent: :destroy
@@ -9,7 +11,7 @@ class QuestionOption < ApplicationRecord
   scope :ordered, -> { order(:position) }
 
   def text_for(locale)
-    translation_for(locale)&.text || translation_for("pl")&.text || question_option_translations.first&.text.to_s
+    translation_for(locale)&.text || translation_for('pl')&.text || question_option_translations.first&.text.to_s
   end
 
   def translation_for(locale)

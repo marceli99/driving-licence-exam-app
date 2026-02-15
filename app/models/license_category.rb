@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class LicenseCategory < ApplicationRecord
   has_many :question_categories, dependent: :destroy
   has_many :questions, through: :question_categories

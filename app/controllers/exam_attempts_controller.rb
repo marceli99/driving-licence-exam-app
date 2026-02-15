@@ -1,31 +1,9 @@
+# frozen_string_literal: true
+
 class ExamAttemptsController < ApplicationController
-  before_action :set_reference_data, only: [ :new, :create ]
-  before_action :set_exam_attempt, only: [ :show, :update, :cancel, :result ]
-  before_action :expire_exam_attempt_if_needed, only: [ :show, :update ]
-
-  def new
-    @selected_locale = normalized_locale(params[:locale].presence || "pl")
-    @selected_category_id = params[:license_category_id]
-  end
-
-  def create
-    @selected_locale = normalized_locale(attempt_params[:locale].presence || "pl")
-    @selected_category_id = attempt_params[:license_category_id]
-
-    license_category = @license_categories.find_by(id: @selected_category_id)
-    builder = ExamAttemptBuilder.new(
-      license_category: license_category,
-      locale: @selected_locale,
-      exam_blueprint: @exam_blueprint,
-      question_bank: @question_bank
-    )
-
-    attempt = builder.call
-    redirect_to exam_attempt_path(attempt)
-  rescue ExamAttemptBuilder::BuildError => e
-    flash.now[:alert] = e.message
-    render :new, status: :unprocessable_entity
-  end
+  before_action :set_reference_data, only: %i[new create]
+  before_action :set_exam_attempt, only: %i[show update cancel result]
+  before_action :expire_exam_attempt_if_needed, only: %i[show update]
 
   def show
     unless @exam_attempt.status_in_progress?
@@ -48,13 +26,37 @@ class ExamAttemptsController < ApplicationController
     @questions_total = @exam_attempt.exam_attempt_items.count
     @answered_questions_count = @questions_total - unanswered_items_count
     @last_question = unanswered_items_count == 1
-    @exam_time_left_seconds = [ (@exam_attempt.deadline_at - now).to_i, 0 ].max
+    @exam_time_left_seconds = [(@exam_attempt.deadline_at - now).to_i, 0].max
     @question_time_limit_seconds = question_time_limit_seconds(@current_item)
     @question_time_left_seconds = question_time_left_seconds(@current_item, now)
   end
 
+  def new
+    @selected_locale = normalized_locale(params[:locale].presence || 'pl')
+    @selected_category_id = params[:license_category_id]
+  end
+
+  def create
+    @selected_locale = normalized_locale(attempt_params[:locale].presence || 'pl')
+    @selected_category_id = attempt_params[:license_category_id]
+
+    license_category = @license_categories.find_by(id: @selected_category_id)
+    builder = ExamAttemptBuilder.new(
+      license_category: license_category,
+      locale: @selected_locale,
+      exam_blueprint: @exam_blueprint,
+      question_bank: @question_bank
+    )
+
+    attempt = builder.call
+    redirect_to exam_attempt_path(attempt)
+  rescue ExamAttemptBuilder::BuildError => e
+    flash.now[:alert] = e.message
+    render :new, status: :unprocessable_content
+  end
+
   def update
-    if !@exam_attempt.status_in_progress?
+    unless @exam_attempt.status_in_progress?
       redirect_to result_exam_attempt_path(@exam_attempt)
       return
     end
@@ -70,7 +72,7 @@ class ExamAttemptsController < ApplicationController
     ensure_question_presented!(item, now)
 
     if params[:item_id].to_i != item.id
-      redirect_to exam_attempt_path(@exam_attempt), alert: t("ui.flash.question_already_closed")
+      redirect_to exam_attempt_path(@exam_attempt), alert: t('ui.flash.question_already_closed')
       return
     end
 
@@ -104,7 +106,7 @@ class ExamAttemptsController < ApplicationController
 
   def cancel
     unless @exam_attempt.status_in_progress?
-      redirect_to root_path, notice: t("ui.flash.exam_already_finished")
+      redirect_to root_path, notice: t('ui.flash.exam_already_finished')
       return
     end
 
@@ -115,7 +117,7 @@ class ExamAttemptsController < ApplicationController
       passed: false
     )
 
-    redirect_to root_path, notice: t("ui.flash.exam_cancelled")
+    redirect_to root_path, notice: t('ui.flash.exam_cancelled')
   end
 
   private
@@ -138,29 +140,30 @@ class ExamAttemptsController < ApplicationController
     value = locale.to_s
     return value if DrivingTestConstants::LOCALES.include?(value)
 
-    "pl"
+    'pl'
   end
 
   def exam_items_for_view
     @exam_attempt.exam_attempt_items
-      .includes(question: [
-        :question_translations,
-        { question_options: :question_option_translations },
-        { question_media_links: { media_asset: [ :original_file_attachment, :original_file_blob ] } }
-      ])
-      .order(:position)
+                 .includes(question: [
+                             :question_translations,
+                             { question_options: :question_option_translations },
+                             { question_media_links: { media_asset: %i[original_file_attachment original_file_blob] } }
+                           ])
+                 .order(:position)
   end
 
   def current_exam_item
     @current_exam_item ||= @exam_attempt.exam_attempt_items
-      .includes(question: [
-        :question_translations,
-        { question_options: :question_option_translations },
-        { question_media_links: { media_asset: [ :original_file_attachment, :original_file_blob ] } }
-      ])
-      .where(answered_at: nil)
-      .order(:position)
-      .first
+                                        .includes(question: [
+                                                    :question_translations,
+                                                    { question_options: :question_option_translations },
+                                                    { question_media_links: { media_asset: %i[original_file_attachment
+                                                                                              original_file_blob] } }
+                                                  ])
+                                        .where(answered_at: nil)
+                                        .order(:position)
+                                        .first
   end
 
   def unanswered_items_count
@@ -169,13 +172,13 @@ class ExamAttemptsController < ApplicationController
 
   def ensure_question_presented!(item, now)
     return if item.blank?
-    return if item.snapshot["presented_at"].present?
+    return if item.snapshot['presented_at'].present?
 
-    item.update!(snapshot: item.snapshot.merge("presented_at" => now.iso8601))
+    item.update!(snapshot: item.snapshot.merge('presented_at' => now.iso8601))
   end
 
   def presented_at_for(item)
-    raw = item.snapshot["presented_at"]
+    raw = item.snapshot['presented_at']
     return item.created_at if raw.blank?
 
     Time.zone.parse(raw) || item.created_at
@@ -193,7 +196,7 @@ class ExamAttemptsController < ApplicationController
 
   def question_time_left_seconds(item, now)
     deadline = presented_at_for(item) + question_time_limit_seconds(item).seconds
-    [ (deadline - now).to_i, 0 ].max
+    [(deadline - now).to_i, 0].max
   end
 
   def question_timed_out?(item, now)
